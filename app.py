@@ -392,13 +392,13 @@ with tab3:
     st.subheader("Model Selection & Strategic Rationale")
     st.markdown("""
     #### 1. Why a Global Model Over Local Time-Series (Prophet & SARIMA)
-    Although univariate models like Prophet or SARIMA perform well for single established items (e.g., SKU-1000 Prophet MAE: 27.81), our production architecture uses a **Global Model** (`alfiinyang/XGSupply`):
+    Although univariate models like Prophet or SARIMA perform well for single established items (e.g., SKU-1000 Prophet MAE: 27.81), the production architecture uses a **Global Model** (`alfiinyang/XGSupply`):
     - **Cold-Start Capability:** Newly launched SKUs (such as `SKU-2000`, `SKU-2001`, `SKU-2002`) have under 2 weeks of history. Local time-series models fail without sufficient history. The global model learns category-wide purchasing dynamics to forecast demand accurately for new items.
     - **Operational Scalability:** Managing and monitoring a single global model for hundreds of SKUs is production-feasible, whereas maintaining separate individual ARIMA pipelines causes high operational overhead.
     - **Multivariate Exogenous Features:** Ingests supplier lead time, rolling volatility, and replenishment velocity directly into the decision boundary.
 
     #### 2. Why XGBoost Over Other Global Models (MAE & RMSE Evaluation)
-    We trained and benchmarked three global candidate models on the chronological 20% test split:
+    Three global candidate models were trained and benchmarked on the chronological 20% test split:
 
     | Candidate Model | Mean Absolute Error (MAE) | Root Mean Squared Error (RMSE) | Status |
     | :--- | :---: | :---: | :--- |
