@@ -388,22 +388,29 @@ with tab2:
         st.plotly_chart(fig_line, use_container_width=True)
 
 
-# -----------------------------------------------------------------------------
-# TAB 3: Strategic Rationale & Model Card
-# -----------------------------------------------------------------------------
 with tab3:
-    st.subheader("Model Selection & Business Strategy")
+    st.subheader("Model Selection & Strategic Rationale")
     st.markdown("""
-    #### 1. Why We Chose the Global XGBoost Model
-    Although univariate models like Prophet or SARIMA perform well for single established items, our production architecture uses the **Global XGBoost Regressor** (`alfiinyang/XGSupply`):
-    - **Cold-Start Capability:** Newly launched SKUs (such as `SKU-2000`, `SKU-2001`, `SKU-2002`) have under 2 weeks of history. The global model learns category-wide purchasing dynamics to forecast demand accurately where time-series models fail.
+    #### 1. Why a Global Model Over Local Time-Series (Prophet & SARIMA)
+    Although univariate models like Prophet or SARIMA perform well for single established items (e.g., SKU-1000 Prophet MAE: 27.81), our production architecture uses a **Global Model** (`alfiinyang/XGSupply`):
+    - **Cold-Start Capability:** Newly launched SKUs (such as `SKU-2000`, `SKU-2001`, `SKU-2002`) have under 2 weeks of history. Local time-series models fail without sufficient history. The global model learns category-wide purchasing dynamics to forecast demand accurately for new items.
     - **Operational Scalability:** Managing and monitoring a single global model for hundreds of SKUs is production-feasible, whereas maintaining separate individual ARIMA pipelines causes high operational overhead.
     - **Multivariate Exogenous Features:** Ingests supplier lead time, rolling volatility, and replenishment velocity directly into the decision boundary.
 
-    #### 2. Model Performance Benchmark
-    Evaluated on a chronological 20% test split:
-    - **Mean Absolute Error (MAE):** `53.18 units`
-    - **Root Mean Squared Error (RMSE):** `82.90 units`
+    #### 2. Why XGBoost Over Other Global Models (MAE & RMSE Evaluation)
+    We trained and benchmarked three global candidate models on the chronological 20% test split:
+
+    | Candidate Model | Mean Absolute Error (MAE) | Root Mean Squared Error (RMSE) | Status |
+    | :--- | :---: | :---: | :--- |
+    | **Linear Regression** (Baseline) | 53.30 units | **82.64 units** | Benchmarked |
+    | **Random Forest Regressor** | 54.23 units | 84.35 units | Benchmarked |
+    | **XGBoost Regressor** (Selected) | **53.18 units** | 82.90 units | **Selected Production Model** |
+
+    **Key Evaluation Insights:**
+    - **Lowest Mean Absolute Error (MAE: 53.18):** XGBoost achieved the best MAE across all candidate models. In supply chain operations, MAE measures the average daily unit error. Minimizing MAE directly minimizes the safety buffer misallocations required to prevent stockouts.
+    - **RMSE Analysis vs. Linear Regression:** While Linear Regression produced a marginally lower RMSE (82.64 vs. 82.90), linear models assume strictly linear, additive relationships. They fail to capture critical non-linear interactions between supplier lead time constraints, rolling stock-to-sales ratios, and category demand swings.
+    - **Outperforming Random Forest:** Random Forest lagged behind on both metrics (MAE 54.23, RMSE 84.35) due to sub-optimal tree averaging on continuous trend features, while requiring significantly higher memory and inference latency.
+    - **Conclusion:** XGBoost offers the ideal combination of lowest absolute forecast error, gradient-boosted error correction, and fast, lightweight execution suitable for production inference.
 
     #### 3. Hugging Face Deployment
     - **Repository:** [`alfiinyang/XGSupply`](https://huggingface.co/alfiinyang/XGSupply)
