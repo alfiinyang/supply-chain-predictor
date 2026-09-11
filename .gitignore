@@ -1,0 +1,33 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Assessment briefs and docx files
+*FMN*
+*fmn*
+*.docx
+
+# Duplicate root scripts (logic is integrated in backend/)
+llm_alert_explainer.py
+llm_insights.py
+
+# Downloaded Hugging Face model artifacts (cached locally at runtime)
+models/
+*.joblib
+
+# Environment variables & secrets
+.env
+.streamlit/secrets.toml
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS generated files
+.DS_Store
+Thumbs.db
