@@ -75,31 +75,68 @@ A clean, intuitive dashboard designed for operational stakeholders:
 
 ---
 
-## 3. How to Run
+## 3. How to Run and Use
 
-### Prerequisites
+### Live Cloud Deployment
+The interactive dashboard is publicly hosted and ready to use without local installation:
+- **Live Application URL:** [https://supply-chain-predictor-qcdp.onrender.com/](https://supply-chain-predictor-qcdp.onrender.com/)
+
+---
+
+### Local Installation
+
+#### Prerequisites
 - Python 3.10+ installed.
 
-### Step 1: Clone the Repository
+#### Step 1: Clone the Repository
 ```bash
 git clone https://github.com/alfiinyang/supply-chain-predictor.git
 cd supply-chain-predictor
 ```
 
-### Step 2: Install Dependencies
+#### Step 2: Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 3: Launch the Dashboard
+#### Step 3: Launch the Dashboard
 ```bash
 streamlit run app.py
 ```
 
-### Step 4: Open in Browser
-- Navigate to `http://localhost:8501` in any browser.
-- In the sidebar, enter a **Google Gemini API Key** to activate live AI explanations.
-- The app comes pre-loaded with sample operational data for all 28 SKUs, and also supports uploading custom CSV batches.
+#### Step 4: Open in Browser
+- Navigate to `http://localhost:8501` in any modern web browser.
+- In the sidebar, enter a **Google Gemini API Key** to enable real-time `gemini-3.6-flash` risk explanations.
+- By default, the dashboard runs on the built-in 28-SKU snapshot, with an option in the sidebar to upload custom operational CSV files.
+
+---
+
+### Custom Input Data Specifications
+
+When uploading custom inventory CSV files to the dashboard, the data must adhere to the following schema and formatting standards:
+
+#### 1. Required Schema & Columns
+
+| Column Name | Data Type | Description | Example Values |
+| :--- | :---: | :--- | :--- |
+| `date` | String / Date | Daily observation timestamp in `YYYY-MM-DD` format | `2026-06-29` |
+| `sku_id` | String | Unique item / stock keeping unit identifier | `SKU-1000`, `SKU-2001` |
+| `category` | String | Product department or grouping | `Snacks`, `Beverages`, `Dairy`, `Grains` |
+| `units_sold` | Numeric ($\ge 0$) | Daily sales volume (primary target feature) | `145`, `210` |
+| `units_received` | Integer ($\ge 0$) | Stock replenishment delivered to warehouse on that date | `0`, `500` |
+| `closing_stock` | Numeric ($\ge 0$) | Physical inventory remaining on hand at close of day | `320`, `1450` |
+| `lead_time_days` | Integer ($\ge 1$) | Supplier delivery lead time in calendar days | `5`, `7`, `14` |
+
+#### 2. Pre-Addressed Data Quality Requirements
+To ensure accurate predictions and prevent processing errors, the uploaded dataset must be pre-cleaned by the user:
+- **Zero Missing / Null Values:** Columns `date`, `sku_id`, `units_sold`, `units_received`, and `closing_stock` must not contain blank or `NaN` cells. Missing values must be imputed or resolved before ingestion.
+- **Non-Negative Values:** Units sold, received, closing stock balances, and lead times cannot be negative.
+- **Continuous Daily Cadence:** Observations should be reported on a daily frequency without skipped calendar dates per SKU. Inactive sales days should have `units_sold = 0` rather than omitted rows.
+- **Standardized Identifiers:** Categorical labels (`sku_id`, `category`) should follow uniform naming conventions and casing without trailing whitespace.
+
+#### 3. Length of Historical Data Window
+- **Minimum Requirement:** At least **30 consecutive days** of daily operational records per SKU (30–45+ days recommended) leading up to the forecast date.
+- **Rationale:** The predictive pipeline automatically derives 7-day and 30-day rolling averages (`rolling_avg_7_days`, `rolling_avg_30_days`), demand volatility measures (`rolling_std_7_days`, `rolling_std_30_days`), and historical lag indicators (`lag_7_days`, `lag_30_days`). Providing 30+ consecutive days provides full numerical coverage for the XGBoost model's feature schema. Cold-start SKUs with shorter histories are supported via backward filling, but established SKUs require 30+ days for optimal forecast fidelity.
 
 ---
 
